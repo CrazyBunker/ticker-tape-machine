@@ -37,10 +37,10 @@ jobs:
         arduino-cli lib install "ArduinoOTA"
 
     - name: Compile
-      run: arduino-cli compile --fqbn esp32:esp32:esp32 --build-properties build.flash_mode=dio,build.flash_size=4MB ./ticker_machine
+      run: arduino-cli compile --fqbn esp32:esp32:esp32 --build-properties build.flash_mode=dio,build.flash_size=4MB .
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: firmware
-        path: ./ticker_machine/build/ticker_machine.ino.esp32.esp32.esp32.bin
+        path: ./build/ticker_machine.ino.esp32.esp32.esp32.bin
