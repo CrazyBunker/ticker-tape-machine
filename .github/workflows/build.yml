@@ -1,0 +1,45 @@
+name: Build ESP32 Stock Ticker
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Cache Arduino libraries
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.arduino15/packages
+          ~/.arduino15/libraries
+        key: arduino-libraries-${{ hashFiles('**/*.ino', '**/*.h', '**/*.cpp') }}
+        restore-keys: arduino-libraries-
+
+    - name: Compile sketch
+      uses: arduino/setup-arduino-cli@v1
+
+    - name: Install ESP32 core
+      run: |
+        arduino-cli core update-index
+        arduino-cli core install esp32:esp32
+
+    - name: Install libraries
+      run: |
+        arduino-cli lib install "ArduinoJson@^6.21.3"
+        arduino-cli lib install "ESPmDNS"
+        arduino-cli lib install "ArduinoOTA"
+
+    - name: Compile
+      run: arduino-cli compile --fqbn esp32:esp32:esp32 --build-properties build.flash_mode=dio,build.flash_size=4MB ./ticker_machine
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: firmware
+        path: ./ticker_machine/build/ticker_machine.ino.esp32.esp32.esp32.bin
