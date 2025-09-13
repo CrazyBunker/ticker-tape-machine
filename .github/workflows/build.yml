@@ -39,10 +39,10 @@ jobs:
         pwd
 
     - name: Compile
-      run: arduino-cli compile --fqbn esp32:esp32:esp32 --build-property build.flash_mode=dio --build-property build.flash_size=4MB .
+      run: arduino-cli compile --fqbn esp32:esp32:esp32 --build-property build.flash_mode=dio --build-property build.flash_size=4MB -v --output-dir ./build .
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: firmware
-        path: ./build/ticker-tape-machine.ino.esp32.esp32.esp32.bin
+        path: ./build
