@@ -59,7 +59,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: firmware
-        path: ./firmware
+        path: ./build
 
     - name: OTA Upload
       run: arduino-cli upload -p ${{ vars.OTA_DEVICE}} --upload-field password=${{ secrets.OTA_PASSWORD }} --fqbn esp32:esp32:esp32 --build-path ./build --protocol network
