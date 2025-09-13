@@ -44,4 +44,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: firmware
-        path: ./build/ticker_machine.ino.esp32.esp32.esp32.bin
+        path: ./build/ticker-tape-machine.ino.esp32.esp32.esp32.bin
