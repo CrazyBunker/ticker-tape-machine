@@ -35,9 +35,10 @@ jobs:
       run: |
         arduino-cli lib install "ArduinoJson@7.4.2"
         arduino-cli lib install "ArduinoOTA"
+        pwd
 
     - name: Compile
-      run: arduino-cli compile --fqbn esp32:esp32:esp32 --build-properties build.flash_mode=dio,build.flash_size=4MB .
+      run: arduino-cli compile --fqbn esp32:esp32:esp32 --build-property build.flash_mode=dio,build.flash_size=4MB ../
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
