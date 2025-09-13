@@ -1,5 +1,5 @@
 # ESP32 Биржевой Тикер
-
+[![Build ESP32 Stock Ticker](https://github.com/CrazyBunker/ticker-tape-machine/actions/workflows/build.yml/badge.svg)](https://github.com/CrazyBunker/ticker-tape-machine/actions/workflows/build.yml)
 ![Тикерный аавтомат](media/example.jpg)
 
 ## Описание
