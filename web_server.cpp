@@ -90,7 +90,11 @@ void handleRoot() {
       <form action="/clear" method="post" onsubmit="return confirm('Вы уверены что хотите удалить ВСЕ тикеры? Это действие нельзя отменить!');">
         <button type="submit" class="danger-btn">Удалить Все Тикеры</button>
       </form>
-    </div>
+    </div>)=====";
+
+   html += R"=====(<div class="section">
+                    <h2><a href='/wifi/config'>WiFi Settings</a></h2>
+                   </div>
   </div>
 </body>
 </html>
@@ -332,3 +336,4 @@ th {
 
   server.send(200, "text/css", css);
 }
+
