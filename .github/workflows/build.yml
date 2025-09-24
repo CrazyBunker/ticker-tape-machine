@@ -44,15 +44,13 @@ jobs:
     - name: Package binary
       run: |
         mkdir -p dist
-        tar -czf "dist/ticker-tape-machine.tar.gz" -C "build" "./"
+        tar -czf "dist/ticker-tape-machine.tar.gz" -C "build"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: ticker-tape-machine
         path: dist/ticker-tape-machine.tar.gz
-
-
 
   deploy:
     runs-on: self-hosted
