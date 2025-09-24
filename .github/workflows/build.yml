@@ -3,6 +3,9 @@ name: Build ESP32 Stock Ticker
 on:
   push:
     branches: [ main ]
+    
+permissions:
+  contents: write  # Required for creating releases and uploading assets
 
 jobs:
   build:
