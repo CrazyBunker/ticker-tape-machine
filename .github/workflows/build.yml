@@ -51,8 +51,9 @@ jobs:
     - name: Package binary
       run: |
         mkdir -p dist
-        cd build 
-        tar -czf dist/${{env.APP}}.${{env.ARCHIVE}} .
+        cd build
+        tar -czf ../dist/${{env.APP}}.${{env.ARCHIVE}} .
+        cd ..
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
