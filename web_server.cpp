@@ -24,7 +24,7 @@ void handleRoot() {
       <h2>Добавить Новый Тикер</h2>
       <form action="/add" method="post">
         <input type="text" name="symbol" placeholder="Тикер (например, SBER)" required maxlength="4">
-        <input type="number" step="0.01" name="threshold" placeholder="Пороговая цена" required>
+        <input type="number" step="0.0001" name="threshold" placeholder="Пороговая цена" required>
         <label class="checkbox-label">
           <input type="checkbox" name="isBuy"> Сигнал покупки (звездочка когда цена ниже порога)
         </label>
@@ -49,7 +49,7 @@ void handleRoot() {
     html += "<td>";
     html += "<form action='/update' method='post' class='inline-form'>";
     html += "<input type='hidden' name='symbol' value='" + tickers[i].symbol + "'>";
-    html += "<input type='number' step='0.01' name='threshold' value='" + String(tickers[i].threshold, 2) + "' required>";
+    html += "<input type='number' step='0.0001' name='threshold' value='" + String(tickers[i].threshold, 5) + "' required>";
     html += "<label class='checkbox-label'>";
     html += "<input type='checkbox' name='isBuy' " + String(tickers[i].isBuySignal ? "checked" : "") + "> Покупка";
     html += "</label>";

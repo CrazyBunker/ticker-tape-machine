@@ -54,7 +54,7 @@ String getStockPrice(String symbol) {
         if (price != "null" && price.length() > 0) {
           int dotIndex = price.indexOf('.');
           if (dotIndex != -1) {
-            if (price.length() > dotIndex + 3) price = price.substring(0, dotIndex + 3);
+            if (price.length() > dotIndex + 5) price = price.substring(0, dotIndex + 5);
             if (price.length() > 7) price = price.substring(0, 7);
           } else if (price.length() > 7) price = price.substring(0, 7);
           return price;

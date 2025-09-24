@@ -41,12 +41,19 @@ jobs:
     - name: Compile
       run: arduino-cli compile --fqbn esp32:esp32:esp32 --build-property build.flash_mode=dio --build-property build.flash_size=4MB -v --output-dir ./build .
 
+    - name: Package binary
+      run: |
+        mkdir -p dist
+        tar -czf "dist/ticker-tape-machine.tar.gz" -C "build" "./"
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: firmware
-        path: ./build
-    
+        name: ticker-tape-machine
+        path: dist/ticker-tape-machine.tar.gz
+
+
+
   deploy:
     runs-on: self-hosted
     needs: build
@@ -58,8 +65,24 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
-        name: firmware
-        path: ./build
+        name: ticker-tape-machine
+        path: ./artifact
 
+    - name: Create GitHub Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: "v-${{ github.ref_name }}"
+        name: Release ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+        files: |
+          artifact/**/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+     
     - name: OTA Upload
-      run: arduino-cli upload -p ${{ vars.OTA_DEVICE}} --upload-field password=${{ secrets.OTA_PASSWORD }} --fqbn esp32:esp32:esp32 --build-path ./build --protocol network
+      run: |
+         tar -xvf artifact/ticker-tape-machine/ticker-tape-machine.tar.gz -C build
+         arduino-cli upload -p ${{ vars.OTA_DEVICE}} --upload-field password=${{ secrets.OTA_PASSWORD }} --fqbn esp32:esp32:esp32 --build-path ./build --protocol network
