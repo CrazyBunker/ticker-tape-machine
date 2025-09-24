@@ -1,4 +1,4 @@
-name: Build ESP32 Stock Ticker
+name: Build and Release ESP32 Stock Ticker
 
 on:
   push:
@@ -87,10 +87,3 @@ jobs:
           artifact/**/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-     
-    - name: OTA Upload
-      run: |
-         mkdir -p build
-         tar -xvf artifact/${{env.APP}}.${{env.ARCHIVE}} -C build
-         arduino-cli upload -p ${{ vars.OTA_DEVICE}} --upload-field password=${{ secrets.OTA_PASSWORD }} --fqbn esp32:esp32:esp32 --build-path ./build --protocol network

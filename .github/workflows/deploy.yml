@@ -1,0 +1,79 @@
+name: Build and Deploy ESP32 Stock Ticker
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  APP: ticker-tape-machine
+  ARCHIVE: tar.gz
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Cache Arduino libraries
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.arduino15/packages
+          ~/.arduino15/libraries
+        key: arduino-libraries-${{ hashFiles('**/*.ino', '**/*.h', '**/*.cpp') }}
+        restore-keys: arduino-libraries-
+
+    - name: Compile sketch
+      uses: arduino/setup-arduino-cli@v1
+
+    - name: Install ESP32 core
+      run: |
+        arduino-cli config init
+        arduino-cli config set board_manager.additional_urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+        arduino-cli core update-index
+        arduino-cli core install esp32:esp32
+
+    - name: Install libraries
+      run: |
+        arduino-cli lib install "ArduinoJson@7.4.2"
+        arduino-cli lib install "ArduinoOTA"
+        arduino-cli lib install "LiquidCrystal"
+        pwd
+
+    - name: Compile
+      run: arduino-cli compile --fqbn esp32:esp32:esp32 --build-property build.flash_mode=dio --build-property build.flash_size=4MB -v --output-dir ./build .
+
+    - name: Package binary
+      run: |
+        mkdir -p dist
+        cd build
+        tar -czf ../dist/${{env.APP}}.${{env.ARCHIVE}} .
+        cd ..
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{env.APP}}
+        path: dist/${{env.APP}}.${{env.ARCHIVE}}
+
+  deploy:
+    runs-on: self-hosted
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{env.APP}}
+        path: ./artifact
+     
+    - name: OTA Upload
+      run: |
+         mkdir -p build
+         tar -xvf artifact/${{env.APP}}.${{env.ARCHIVE}} -C build
+         arduino-cli upload -p ${{ vars.OTA_DEVICE}} --upload-field password=${{ secrets.OTA_PASSWORD }} --fqbn esp32:esp32:esp32 --build-path ./build --protocol network
