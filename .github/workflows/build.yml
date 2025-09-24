@@ -7,6 +7,10 @@ on:
 permissions:
   contents: write  # Required for creating releases and uploading assets
 
+env:
+  APP: ticker-tape-machine
+  ARCHIVE: tar.gz
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -47,13 +51,14 @@ jobs:
     - name: Package binary
       run: |
         mkdir -p dist
-        tar -czf dist/ticker-tape-machine.tar.gz -C build .
+        cd build 
+        tar -czf dist/${{env.APP}}.${{env.ARCHIVE}} .
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ticker-tape-machine
-        path: dist/ticker-tape-machine.tar.gz
+        name: ${{env.APP}}
+        path: dist/${{env.APP}}.${{env.ARCHIVE}}
 
   deploy:
     runs-on: self-hosted
@@ -66,7 +71,7 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
-        name: ticker-tape-machine
+        name: ${{env.APP}}
         path: ./artifact
 
     - name: Create GitHub Release
@@ -85,5 +90,5 @@ jobs:
      
     - name: OTA Upload
       run: |
-         tar -xvf artifact/ticker-tape-machine/ticker-tape-machine.tar.gz -C build
+         tar -xvf artifact/${{env.APP}}/${{env.APP}}.${{env.ARCHIVE}} -C build
          arduino-cli upload -p ${{ vars.OTA_DEVICE}} --upload-field password=${{ secrets.OTA_PASSWORD }} --fqbn esp32:esp32:esp32 --build-path ./build --protocol network
