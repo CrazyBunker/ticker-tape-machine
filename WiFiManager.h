@@ -14,11 +14,9 @@ private:
     String apSSID;
     String apPassword;
     int failedAttempts;
-    bool inAPMode;
     unsigned long lastDisplayChange;
     int displayState;
 
-    void setupAP();
     void setupServer();
     void handleRoot();
     void handleConfig();
@@ -26,6 +24,8 @@ private:
     void updateDisplay();
 
 public:
+    bool inAPMode;  // Сделать публичным
+    
     WiFiManager(LiquidCrystal* lcd);
     void begin();
     void checkConnection();
@@ -37,7 +37,9 @@ public:
     String getCurrentPassword();
     bool saveConfig(String ssid, String password);
     
-    // Новые методы для интеграции с основным сервером
+    // Сделать эти методы публичными:
+    void setupAP();
+    void updateAPDisplay();
     String getConfigHTML();
     String getSaveResponse(String ssid, String password);
 };

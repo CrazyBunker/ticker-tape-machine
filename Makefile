@@ -9,3 +9,21 @@ deploy:
 release:
 	git tag -a v$(v) -m "Release $(v)"
 	git push origin v$(v)
+
+clean:
+	rm -rf build
+
+list:
+	echo "=== Структура директорий ==="
+	tree -L 3 -a -I .git
+
+	# Перечисляем все файлы и выводим содержимое текстовых
+	echo "=== Содержимое файлов ==="
+	find . -type f ! -path '*/.git/*' ! -name '*.bin' ! -name '*.elf' ! -name '*.o' -print0 | xargs -0 -I {} bash -c 'echo "Файл: {}"; if file "{}" | grep -q text; then cat "{}"; else echo "(Binary файл, пропущен)"; fi; echo -e "\n---\n"'
+
+	# Очистка
+	cd ..
+	rm -rf $TEMP_DIR
+	echo "Скрипт завершён. Скопируйте вывод выше и отправьте."
+
+all: clean build deploy

@@ -6,7 +6,7 @@
 #include <WebServer.h>
 #include <EEPROM.h>
 #include <ESPmDNS.h>
-#include <NetworkUdp.h>
+#include <WiFiUdp.h>  // Исправить NetworkUdp.h
 #include <ArduinoOTA.h>
 #include "WiFiManager.h"
 
@@ -15,27 +15,7 @@
 #include "network.h"
 #include "eeprom_storage.h"
 #include "web_server.h"
-
-// LCD Pin Configuration
-LiquidCrystal lcd(23, 22, 21, 19, 18, 5);
-
-// Web server on port 80
-WebServer server(80);
-WiFiManager wifiManager(&lcd);
-// Global variables definitions
-TickerData tickers[MAX_TICKERS];
-int numTickers = 0;
-String stockPrices[MAX_TICKERS];
-char updateIndicators[MAX_TICKERS];
-long updateInterval = 600000;
-long displayChangeInterval = 3000;
-int displayedIndices[2] = {0, 0};
-int nextLineToReplace = 0;
-int nextTickerIndex = 0;
-unsigned long lastUpdateTime = 0;
-unsigned long lastDisplayChangeTime = 0;
-bool needRestart = false;
-unsigned long restartTime = 0;
+#include "state_manager.h"
 
 
 void setup() {
@@ -80,30 +60,43 @@ void setup() {
         // В режиме STA показываем страницу настроек
         server.send(200, "text/html", wifiManager.getConfigHTML());
     }
-});
+  });
 
-server.on("/wifi/save", HTTP_POST, []() {
-    String ssid = server.arg("ssid");
-    String password = server.arg("password");
-    
-    String response = wifiManager.getSaveResponse(ssid, password);
-    
-    if (response.startsWith("Error:")) {
-        server.send(400, "text/plain", response);
-    } else {
-        server.send(200, "text/html", response);
-        
-        // Запланировать перезагрузку
-        needRestart = true;
-        restartTime = millis() + 3000;
-        
-            lcd.clear();
-            lcd.setCursor(0, 0);
-            lcd.print("Settings saved");
-            lcd.setCursor(0, 1);
-            lcd.print("Restarting...");
-    }
-});
+  server.on("/wifi/save", HTTP_POST, []() {
+      String ssid = server.arg("ssid");
+      String password = server.arg("password");
+      
+      String response = wifiManager.getSaveResponse(ssid, password);
+      
+      if (response.startsWith("Error:")) {
+          server.send(400, "text/plain", response);
+      } else {
+          server.send(200, "text/html", response);
+          
+          // Запланировать перезагрузку
+          needRestart = true;
+          restartTime = millis() + 3000;
+          
+              lcd.clear();
+              lcd.setCursor(0, 0);
+              lcd.print("Settings saved");
+              lcd.setCursor(0, 1);
+              lcd.print("Restarting...");
+      }
+  });
+
+  server.on("/ap/enable", HTTP_POST, []() {
+      wifiManager.setupAP(); // Теперь публичный метод
+      server.send(200, "text/plain", "AP mode activated");
+  });
+
+  server.on("/ap/disable", HTTP_POST, []() {
+      WiFi.softAPdisconnect(true);
+      wifiManager.inAPMode = false; // Теперь публичная переменная
+      stateManager.setState(STATE_NORMAL);
+      server.send(200, "text/plain", "AP mode disabled");
+  });
+
   server.begin();
   Serial.println("HTTP server started on port 80");
   
