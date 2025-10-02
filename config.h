@@ -4,10 +4,15 @@
 #include <Arduino.h>
 #include <LiquidCrystal.h>
 #include <WebServer.h>
+#include "WiFiManager.h"  // Добавить
 
-// Forward declarations
-class LiquidCrystal;
-class WebServer;
+// Добавить константы
+#define BUTTON_PIN 4
+#define BUTTON_PRESS_TIME 3000
+
+// УБРАТЬ forward declarations (они не нужны)
+// class LiquidCrystal;
+// class WebServer;
 
 // Wi-Fi Network Credentials
 extern const char* ssid;
@@ -32,6 +37,8 @@ struct TickerData {
 // Global variables declarations
 extern LiquidCrystal lcd;
 extern WebServer server;
+extern WiFiManager wifiManager;  // Добавить эту строку
+
 extern TickerData tickers[MAX_TICKERS];
 extern int numTickers;
 extern String stockPrices[MAX_TICKERS];
@@ -43,5 +50,7 @@ extern int nextLineToReplace;
 extern int nextTickerIndex;
 extern unsigned long lastUpdateTime;
 extern unsigned long lastDisplayChangeTime;
+extern bool needRestart;
+extern unsigned long restartTime;
 
 #endif

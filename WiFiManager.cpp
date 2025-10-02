@@ -1,5 +1,10 @@
 #include "WiFiManager.h"
 #include "Arduino.h"
+#include "state_manager.h"  // Добавить
+#include "config.h"  // Добавить
+
+// Добавить extern объявления
+extern StateManager stateManager;
 
 WiFiManager::WiFiManager(LiquidCrystal* lcd) : 
   server(80), lcd(lcd), failedAttempts(0), inAPMode(false), 
@@ -8,99 +13,66 @@ WiFiManager::WiFiManager(LiquidCrystal* lcd) :
 void WiFiManager::begin() {
     preferences.begin("wifi-config", false);
     
-    // Попытка подключения к сохраненной сети
     String ssid = preferences.getString("ssid", "");
     String password = preferences.getString("password", "");
     
-    if (ssid != "") {
-        WiFi.begin(ssid.c_str(), password.c_str());
-        delay(1000);
-        
-        // Ждем подключения в течение 10 секунд
-        int attempts = 0;
-        while (WiFi.status() != WL_CONNECTED && attempts < 10) {
-            delay(1000);
-            attempts++;
-        }
-        
-        if (WiFi.status() != WL_CONNECTED) {
-            failedAttempts = preferences.getInt("failedAttempts", 0) + 1;
-            preferences.putInt("failedAttempts", failedAttempts);
-            
-            if (failedAttempts >= 10) {
-                setupAP();
-            }
-        } else {
-            preferences.putInt("failedAttempts", 0);
-            Serial.print("Connected to WiFi: ");
-            Serial.println(ssid);
-            
-            lcd->clear();
-            lcd->setCursor(0, 0);
-            lcd->print("Connected to:");
-            lcd->setCursor(0, 1);
-            String displaySSID = ssid;
-            if (displaySSID.length() > 16) {
-                displaySSID = displaySSID.substring(0, 13) + "...";
-            }
-            lcd->print(displaySSID);
-            delay(2000);
-            
-        }
-    } else {
+    if (ssid == "") {
         setupAP();
+        return;
     }
+    
+    // Использовать правильные константы состояний
+    stateManager.setState((DeviceState)1); // STATE_WIFI_CONNECT
+    
+    WiFi.begin(ssid.c_str(), password.c_str());
+    
+    unsigned long startTime = millis();
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        stateManager.update();
+        
+        if (millis() - startTime > 30000) {
+            setupAP();
+            return;
+        }
+        
+        // Исправить обращение к кнопке
+        if (digitalRead(4) == LOW) { // BUTTON_PIN
+            if (millis() - startTime > 1000) {
+                setupAP();
+                return;
+            }
+        }
+    }
+    
+    // Подключение успешно
+    stateManager.setState((DeviceState)3); // STATE_NORMAL
+    
+    lcd->clear();  // Исправить на стрелочку
+    lcd->print("WiFi Connected");
+    lcd->setCursor(0, 1);
+    lcd->print(WiFi.localIP());
+    delay(2000);
 }
 
 void WiFiManager::setupAP() {
-    apSSID = "TickerTapeAP";
+    apSSID = "TickerAP";
     apPassword = "config123";
     
     WiFi.softAP(apSSID.c_str(), apPassword.c_str());
     inAPMode = true;
     
-    Serial.print("AP Mode Active. SSID: ");
-    Serial.println(apSSID);
-    Serial.print("IP Address: ");
-    Serial.println(WiFi.softAPIP());
-    
-    // Display AP info on LCD
-    updateDisplay();
-    
+    stateManager.setState((DeviceState)2); // STATE_AP_MODE
+    updateAPDisplay();
     setupServer();
 }
 
-void WiFiManager::update() {
-    if (inAPMode && millis() - lastDisplayChange > 3000) {
-        displayState = (displayState + 1) % 2;
-        updateDisplay();
-        lastDisplayChange = millis();
-    }
-}
-
-void WiFiManager::updateDisplay() {
-   
+void WiFiManager::updateAPDisplay() {
     lcd->clear();
-    
-    if (displayState == 0) {
-        lcd->setCursor(0, 0);
-        lcd->print("WiFi Setup Mode");
-        lcd->setCursor(0, 1);
-        String displaySSID = "SSID: " + apSSID;
-        if (displaySSID.length() > 16) {
-            displaySSID = displaySSID.substring(0, 16);
-        }
-        lcd->print(displaySSID);
-    } else {
-        lcd->setCursor(0, 0);
-        lcd->print("Password:");
-        lcd->setCursor(0, 1);
-        String displayPass = apPassword;
-        if (displayPass.length() > 16) {
-            displayPass = displayPass.substring(0, 16);
-        }
-        lcd->print(displayPass);
-    }
+    lcd->print("AP Mode: TickerAP");
+    lcd->setCursor(0, 1);
+    lcd->print("IP: ");
+    lcd->print(WiFi.softAPIP().toString());
 }
 
 void WiFiManager::setupServer() {
@@ -365,5 +337,40 @@ String WiFiManager::getSaveResponse(String ssid, String password) {
         return html;
     } else {
         return "Error: SSID cannot be empty";
+    }
+}
+
+
+void WiFiManager::update() {
+    if (inAPMode && millis() - lastDisplayChange > 3000) {
+        displayState = (displayState + 1) % 2;
+        updateDisplay();
+        lastDisplayChange = millis();
+    }
+}
+
+void WiFiManager::updateDisplay() {
+    if (!lcd) return;
+    
+    lcd->clear();
+    
+    if (displayState == 0) {
+        lcd->setCursor(0, 0);
+        lcd->print("AP Mode Active");
+        lcd->setCursor(0, 1);
+        String displaySSID = "SSID: " + apSSID;
+        if (displaySSID.length() > 16) {
+            displaySSID = displaySSID.substring(0, 16);
+        }
+        lcd->print(displaySSID);
+    } else {
+        lcd->setCursor(0, 0);
+        lcd->print("Password:");
+        lcd->setCursor(0, 1);
+        String displayPass = apPassword;
+        if (displayPass.length() > 16) {
+            displayPass = displayPass.substring(0, 16);
+        }
+        lcd->print(displayPass);
     }
 }
